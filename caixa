@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Caixa - Limonada</title>
+<style>
+body{font-family:Arial;background:#f1ffe8;padding:20px}
+h1{margin-bottom:10px}
+button{padding:15px;margin:5px;font-size:16px;border-radius:10px;border:none;background:#4caf50;color:white}
+.produtos button{display:block;width:260px}
+.card{background:white;padding:10px;border-radius:10px;margin:5px 0}
+input{padding:10px;font-size:16px;margin:5px;width:260px}
+</style>
+</head>
+<body>
+
+<h1>🍋 CAIXA</h1>
+
+<h3>Cadastrar Produto</h3>
+<input id="pnome" placeholder="Nome do produto">
+<input id="ppreco" type="number" placeholder="Preço">
+<br>
+<button onclick="addProduto()">Adicionar</button>
+
+<h3>Produtos</h3>
+<div class="produtos" id="produtos"></div>
+
+<h3>Pedido</h3>
+<div id="pedido"></div>
+<b>Total: R$ <span id="total">0</span></b>
+
+<h3>Clube</h3>
+<input id="fone" placeholder="Telefone do cliente">
+
+<br><br>
+<button onclick="finalizar()">FINALIZAR PEDIDO</button>
+
+<script>
+let produtos=JSON.parse(localStorage.getItem("produtos")||"[]");
+let pedido=[], total=0;
+let clientes=JSON.parse(localStorage.getItem("clientes")||"{}");
+
+function salvarProdutos(){
+ localStorage.setItem("produtos",JSON.stringify(produtos));
+}
+
+function addProduto(){
+ let nome=document.getElementById("pnome").value;
+ let preco=parseFloat(document.getElementById("ppreco").value);
+ if(!nome||!preco) return alert("Preencha tudo");
+ produtos.push({nome,preco});
+ salvarProdutos();
+ renderProdutos();
+}
+
+function renderProdutos(){
+ let div=document.getElementById("produtos");
+ div.innerHTML="";
+ produtos.forEach(p=>{
+  let b=document.createElement("button");
+  b.innerText=p.nome+" - R$"+p.preco;
+  b.onclick=()=>addPedido(p);
+  div.appendChild(b);
+ });
+}
+
+function addPedido(p){
+ pedido.push(p);
+ total+=p.preco;
+ renderPedido();
+}
+
+function renderPedido(){
+ document.getElementById("pedido").innerHTML=
+  pedido.map(p=>"<div class='card'>"+p.nome+"</div>").join("");
+ document.getElementById("total").innerText=total;
+}
+
+function finalizar(){
+ if(pedido.length==0) return alert("Pedido vazio");
+
+ let tel=document.getElementById("fone").value;
+ if(tel){
+  if(!clientes[tel]) clientes[tel]={pontos:0};
+  clientes[tel].pontos+=Math.floor(total);
+  localStorage.setItem("clientes",JSON.stringify(clientes));
+ }
+
+ let pedidos=JSON.parse(localStorage.getItem("pedidos")||"[]");
+ pedidos.push({id:Date.now(),itens:pedido,status:"novo"});
+ localStorage.setItem("pedidos",JSON.stringify(pedidos));
+
+ pedido=[]; total=0; renderPedido();
+ alert("Pedido enviado para a cozinha!");
+}
+
+renderProdutos();
+</script>
+
+</body>
+</html>
